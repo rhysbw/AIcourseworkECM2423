@@ -1,6 +1,7 @@
 import time
 from collections import deque
-from PIL import Image, ImageDraw
+from PIL import Image
+from datetime import datetime
 
 
 def readMazeFile(fileName):
@@ -43,7 +44,8 @@ def is_valid_location(maze, location):
     @return: Boolean: based on if location is valid
     """
     row, col = location
-    if row < 0 or row >= len(maze) or col < 0 or col >= len(maze[0]):  # checks if location actually resides within the maze space
+    if row < 0 or row >= len(maze) or col < 0 or col >= len(
+            maze[0]):  # checks if location actually resides within the maze space
         return False
     if maze[row][col] == '#':  # checks if is a wall or a valid movable space
         return False
@@ -57,7 +59,8 @@ def get_valid_adjacent(maze, location):
     @return: list of valid locations
     """
     row, col = location
-    adjacent = [(row - 1, col), (row, col + 1), (row + 1, col), (row, col - 1)]  # list of all spaces next to current pos
+    adjacent = [(row - 1, col), (row, col + 1), (row + 1, col),
+                (row, col - 1)]  # list of all spaces next to current pos
     validPos = []
     # checks all adjacent locations to see which are valid
     for n in adjacent:
@@ -138,46 +141,83 @@ def dfs(maze, start, goal):
 
     # We didn't find the goal node.
     return None, nodesExplored, time.time() - startTime, visited
-def visulizePath(maze, visited, path):
 
-    # Define colors for drawing
-    WALL_COLOR = (0, 0, 0)
-    FREE_COLOR = (255, 255, 255)
-    VISITED_COLOR = (159, 43, 104)
-    PATH_COLOR = (0, 255, 0)
 
-    # Convert maze list to an image
-    img_width, img_height = len(maze[0]), len(maze)
-    img = Image.new('RGB', (img_width, img_height))
-    draw = ImageDraw.Draw(img)
-    for y in range(img_height):
-        for x in range(img_width):
-            if maze[y][x] == '#':
-                draw.rectangle([(x, y), (x + 1, y + 1)], fill=WALL_COLOR)
+def pathOnMazeFile(maze, path, algorithm, mazeFile):
+    """Marks the path on the maze and outputs it to a text file."""
+    print('Generating Solution.txt')
+    new_maze = []
+    for row_index, row in enumerate(maze):
+        new_row = []
+        for col_index, cell in enumerate(row):
+            if (row_index, col_index) in path:
+                new_row.append('* ')
             else:
-                draw.rectangle([(x, y), (x + 1, y + 1)], fill=FREE_COLOR)
+                new_row.append(cell + ' ')
+        new_maze.append(new_row)
 
-    # Mark visited cells in the image
+    with open(algorithm+ mazeFile + '.txt', 'w') as f:
+        for row in new_maze:
+            f.write(''.join(row) + '\n')
 
 
-    # Mark path cells in the image
-    for cell in path:
-        draw.rectangle([(cell[1], cell[0]), (cell[1] + 1, cell[0] + 1)], fill=PATH_COLOR)
+def visulizePath(maze, path, visited, algorithm, mazeFile):
+    """Marks the path and visited cells on the maze and outputs it to an image file."""
+    print('Generating Solution.png')
+    height = len(maze)
+    width = len(maze[0])
+    img = Image.new('RGB', (width, height), 'white')
+    pixels = img.load()
 
-    # Save the image to a file
-    img.save('maze_path.png')
+    for row_index, row in enumerate(maze):
+        for col_index, cell in enumerate(row):
+            if cell == '#':
+                pixels[col_index, row_index] = (0, 0, 0)
+            elif (row_index, col_index) in path:
+                pixels[col_index, row_index] = (0, 0, 255)
+            elif (row_index, col_index) in visited:
+                pixels[col_index, row_index] = (255, 0, 0)
+
+    img.save(algorithm + mazeFile + '.png')
+
+
+def statsFile(path, execution_time, nodes_explored, algorithm, timestamp, mazeFile):
+    with open('statistics.txt', 'a') as f:
+        f.write(
+            f'{timestamp}: Path found with {len(path)} steps in {execution_time:.4f} seconds. Witb {nodes_explored} nodes explored. Using {algorithm}. Using {mazeFile}' + '\n')
 
 
 if __name__ == '__main__':
-    maze_file = 'maze-Easy.txt'
+    parent = {}
+    # Select Maze file
+    maze_file = input('Maze file nane or path [Press Enter for Default in code]: ')
+    if maze_file == '':
+        maze_file = 'maze-Large.txt'
     maze = readMazeFile(maze_file)
     start, goal = find_start_and_goal(maze)
-    path, nodes_explored, execution_time, visited = dfs(maze, start, goal)
+
+    # Run Algorithm
+    algorithmSelect = int(input("""\
+1. Depth First Search
+2. Breadth First Search
+Choose Algorithm: """))
+    algorithm = ""
+    match algorithmSelect:
+        case 1:
+            path, nodes_explored, execution_time, visited = dfs(maze, start, goal)
+            algorithm = "Depth First Search"
+        case 2:
+            path, nodes_explored, execution_time, visited = bfs(maze, start, goal)
+            algorithm = "Breadth First Search"
+
     if path:
-        visulizePath(maze, visited, path)
+        timestamp = str(datetime.now())
+        statsFile(path, execution_time, nodes_explored, algorithm, timestamp, maze_file)
+        visulizePath(maze, path, visited, algorithm, maze_file)
+        pathOnMazeFile(maze, path, algorithm, maze_file)
         print(f'Path found with {len(path)} steps in {execution_time:.4f} seconds.')
         print(f'Explored {nodes_explored} nodes.')
-        for location in path:
-            print(location)
+
+
     else:
         print('No path found.')
