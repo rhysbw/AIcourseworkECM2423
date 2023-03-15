@@ -1,2 +1,5 @@
-# AIcourseworkECM2423
-Run python file, in bottom func can specify whether DFS or BFS and which maze to preform the search on
+# How to use
+1. Run the python file mazeSearch.py
+2. Specify Path to maze file
+3. Select search algorithm
+4. View results in terminal window or see statistics.txt
