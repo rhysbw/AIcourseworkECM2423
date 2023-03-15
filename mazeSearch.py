@@ -105,7 +105,6 @@ def breadth_first_search(maze, start, goal):
         for n in get_valid_adjacent(maze, current):
             if n not in visited:
                 queue.append(n)
-                visited.add(n)
                 parent[n] = current
 
     return None, nodesExplored, time.time() - startTime, visited
@@ -145,7 +144,6 @@ def depth_first_search(maze, start, goal):
         for n in get_valid_adjacent(maze, current):
             if n not in visited:
                 stack.append(n)
-                visited.add(n)
                 parent[n] = current
     return None, nodesExplored, time.time() - startTime, visited
 
@@ -158,7 +156,7 @@ def path_on_maze_file(maze, path, algorithm, mazeFile):
     @param algorithm: algorithm used to generate said path
     @param mazeFile: name of file used as maze input
     """
-    print('Generating Solution.txt')
+    print('Generating txt map')
     new_maze = []
     for row_index, row in enumerate(maze):
         new_row = []
@@ -183,7 +181,7 @@ def visualize_path(maze, path, visited, algorithm, mazeFile):
     @param algorithm: algorithm used to generate said path
     @param mazeFile: name of file used as maze input
     """
-    print('Generating Solution.png')
+    print('Generating png map')
     height = len(maze)
     width = len(maze[0])
     img = Image.new('RGB', (width, height), 'white')
@@ -192,11 +190,11 @@ def visualize_path(maze, path, visited, algorithm, mazeFile):
     for row_index, row in enumerate(maze):
         for col_index, cell in enumerate(row):
             if cell == '#':
-                pixels[col_index, row_index] = (0, 0, 0)
+                pixels[col_index, row_index] = (0, 0, 0)  # black
             elif (row_index, col_index) in path:
-                pixels[col_index, row_index] = (0, 0, 255)
+                pixels[col_index, row_index] = (0, 0, 255)  # blue
             elif (row_index, col_index) in visited:
-                pixels[col_index, row_index] = (255, 0, 0)
+                pixels[col_index, row_index] = (255, 0, 0)  # red
 
     img.save(algorithm + mazeFile + '.png')
 
@@ -258,7 +256,7 @@ Choose Algorithm: """))
         timestamp = str(datetime.now())
         print(f'Path found with {len(path)} steps in {execution_time:.4f} seconds.')
         print(f'Explored {nodes_explored} nodes.')
-        if input("Do you want the output files (Y/N): ") == 'Y':
+        if input("Do you want the output files - This can take a while for larger mazes (Y/N): ") == 'Y':
             makeFiles(path, execution_time, nodes_explored, algorithm, timestamp, maze_file)
     else:
         print('No path found.')
