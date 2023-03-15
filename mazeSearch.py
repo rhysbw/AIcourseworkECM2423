@@ -186,6 +186,10 @@ def statsFile(path, execution_time, nodes_explored, algorithm, timestamp, mazeFi
         f.write(
             f'{timestamp}: Path found with {len(path)} steps in {execution_time:.4f} seconds. Witb {nodes_explored} nodes explored. Using {algorithm}. Using {mazeFile}' + '\n')
 
+def makeFiles(path, execution_time, nodes_explored, algorithm, timestamp, mazeFile):
+    statsFile(path, execution_time, nodes_explored, algorithm, timestamp, maze_file)
+    visulizePath(maze, path, visited, algorithm, maze_file)
+    pathOnMazeFile(maze, path, algorithm, maze_file)
 
 if __name__ == '__main__':
     parent = {}
@@ -212,11 +216,10 @@ Choose Algorithm: """))
 
     if path:
         timestamp = str(datetime.now())
-        statsFile(path, execution_time, nodes_explored, algorithm, timestamp, maze_file)
-        visulizePath(maze, path, visited, algorithm, maze_file)
-        pathOnMazeFile(maze, path, algorithm, maze_file)
         print(f'Path found with {len(path)} steps in {execution_time:.4f} seconds.')
         print(f'Explored {nodes_explored} nodes.')
+        if input("Do you want the output files (Y/N): ") == 'Y':
+            makeFiles(path, execution_time, nodes_explored, algorithm, timestamp, maze_file)
 
 
     else:
