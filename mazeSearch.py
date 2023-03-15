@@ -1,4 +1,5 @@
 import time
+import heapq
 from collections import deque
 from PIL import Image
 from datetime import datetime
@@ -148,6 +149,64 @@ def depth_first_search(maze, start, goal):
     return None, nodesExplored, time.time() - startTime, visited
 
 
+def a_star_search(maze, start, goal):
+    """
+    Performs A* search on the maze.
+    @param maze: array representation of the maze
+    @param start: position of start point
+    @param goal: position of end point
+    @return: path taken, number of nodes explored, time taken, coords of visited positions
+    """
+    startTime = time.time()  # for measuring time taken to find path
+    visited = set()  # to allow not going back to previously visited node
+    parent = {}  # to allow for backtracking between nodes to find path
+    nodesExplored = 0
+
+    # initialize heap with starting node and its cost (heuristic + path cost)
+    heap = [(0, start)]
+    heapq.heapify(heap)
+
+    # initialize dictionary to store the cost of each node in the path
+    g = {start: 0}
+
+    while heap:
+        # pop node with the lowest cost from heap
+        current_cost, current = heapq.heappop(heap)
+        nodesExplored += 1
+        visited.add(current)
+
+        if current == goal:
+            endTime = time.time()  # completed time
+            path = []
+            while current != start:
+                # reads path taken by checking which node was a parent of the current (starting at end point)
+                path.append(current)
+                current = parent[current]
+            path.append(start)
+            path.reverse()
+            return path, nodesExplored, endTime - startTime, visited
+
+        # checks for nodes that are valid and have not been visited and adds to heap
+        for n in get_valid_adjacent(maze, current):
+            # calculate cost of reaching adjacent node
+            new_cost = g[current] + 1  # each step has cost 1
+
+            # if the adjacent node has not been visited yet or the new cost is less than its current cost
+            if n not in visited or new_cost < g[n]:
+                # update its cost
+                g[n] = new_cost
+
+                # calculate the heuristic cost (Manhattan distance as is used in Maze searches)
+                h = abs(n[0] - goal[0]) + abs(n[1] - goal[1])
+
+                # add the node to heap with its total cost (heuristic + path cost)
+                heapq.heappush(heap, (new_cost + h, n))
+
+                # update its parent
+                parent[n] = current
+    return None, nodesExplored, time.time() - startTime, visited
+
+
 def path_on_maze_file(maze, path, algorithm, mazeFile):
     """
     Marks the path on the maze and outputs it to a text file.
@@ -195,7 +254,6 @@ def visualize_path(maze, path, visited, algorithm, mazeFile):
                 pixels[col_index, row_index] = (0, 0, 255)  # blue
             elif (row_index, col_index) in visited:
                 pixels[col_index, row_index] = (255, 0, 0)  # red
-
     img.save(algorithm + mazeFile + '.png')
 
 
@@ -238,9 +296,10 @@ if __name__ == '__main__':
     start, goal = find_start_and_goal(maze)
 
     # Run Algorithm
-    algorithmSelect = int(input("""\n
+    algorithmSelect = int(input("""
 1. Depth First Search
 2. Breadth First Search
+3. A* Search
 Choose Algorithm: """))
     algorithm = ""
     match algorithmSelect:
@@ -250,6 +309,9 @@ Choose Algorithm: """))
         case 2:
             path, nodes_explored, execution_time, visited = breadth_first_search(maze, start, goal)
             algorithm = "Breadth First Search"
+        case 3:
+            path, nodes_explored, execution_time, visited = a_star_search(maze, start, goal)
+            algorithm = "AStar search"
 
     # if a path was located
     if path:
