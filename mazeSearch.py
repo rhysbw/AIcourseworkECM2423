@@ -24,7 +24,8 @@ def readMazeFile(fileName):
 
 
 def find_start_and_goal(maze):
-    """Finds the start and goal nodes in the maze.
+    """
+    Finds the start and goal nodes in the maze.
     @param maze: the array representation of the maze
     @return: startLocation of the maze, and end position of the maze
     """
@@ -70,81 +71,93 @@ def get_valid_adjacent(maze, location):
     return validPos
 
 
-def bfs(maze, start, goal):
+def breadth_first_search(maze, start, goal):
     """Performs breadth-first search on the maze.
     @param maze: array representation of the maze
     @param start: position of start point
     @param goal: position of end point
-    @return: path to end, amount of nodes explored, time taken to complete
+    @return: path to end, amount of nodes explored, time taken to complete, coords of visited positions
     """
-    startTime = time.time()
+    startTime = time.time()  # for measuring time taken to find path
     queue = deque([start])
-    visited = set()
-    parent = {}
+    visited = set()  # to allow not going back to previously visited node
+    parent = {}  # to allow for backtracking between nodes to find path
     nodesExplored = 0
 
+    # queue is used instead of stack
     while queue:
-        current = queue.popleft()
+        current = queue.popleft()  # sets the current node as the next node in queue
         nodesExplored += 1
-        visited.add(current)
+        visited.add(current)  # adds to list of visited nodes
 
         if current == goal:
-            # We found the goal node!
-            endTime = time.time()
+            endTime = time.time()  # completed time
             path = []
             while current != start:
+                # reads path taken by checking which node was a parent of the current (starting at end point)
                 path.append(current)
                 current = parent[current]
             path.append(start)
             path.reverse()
             return path, nodesExplored, endTime - startTime, visited
 
+        # checks for nodes that are valid and have not been visited and adds to back of queue
         for n in get_valid_adjacent(maze, current):
             if n not in visited:
                 queue.append(n)
                 visited.add(n)
                 parent[n] = current
 
-    # We didn't find the goal node.
     return None, nodesExplored, time.time() - startTime, visited
 
 
-def dfs(maze, start, goal):
-    """Performs depth-first search on the maze."""
-    startTime = time.time()
+def depth_first_search(maze, start, goal):
+    """
+    Performs depth-first search on the maze.
+    @param maze: array representation of the maze
+    @param start: position of start point
+    @param goal: position of end point
+    @return: path taken, number of nodes explored, time taken, coords of visited positions
+    """
+    startTime = time.time()  # for measuring time taken to find path
     stack = [start]
-    visited = set()
-    parent = {}
+    visited = set()  # to allow not going back to previously visited node
+    parent = {}  # to allow for backtracking between nodes to find path
     nodesExplored = 0
 
     while stack:
-        current = stack.pop()
+        current = stack.pop()  # sets the current nodes as the node at the top of the stack
         nodesExplored += 1
-        visited.add(current)
+        visited.add(current)  # adds to list of visited nodes
 
         if current == goal:
-            # We found the goal node!
-            endTime = time.time()
+            endTime = time.time()  # completed time
             path = []
             while current != start:
+                # reads path taken by checking which node was a parent of the current (starting at end point)
                 path.append(current)
                 current = parent[current]
             path.append(start)
             path.reverse()
             return path, nodesExplored, endTime - startTime, visited
 
+        # checks for nodes that are valid and have not been visited and adds to top of stack
         for n in get_valid_adjacent(maze, current):
             if n not in visited:
                 stack.append(n)
                 visited.add(n)
                 parent[n] = current
-
-    # We didn't find the goal node.
     return None, nodesExplored, time.time() - startTime, visited
 
 
-def pathOnMazeFile(maze, path, algorithm, mazeFile):
-    """Marks the path on the maze and outputs it to a text file."""
+def path_on_maze_file(maze, path, algorithm, mazeFile):
+    """
+    Marks the path on the maze and outputs it to a text file.
+    @param maze: array representation of the maze
+    @param path: [row][colum] position of the path taken
+    @param algorithm: algorithm used to generate said path
+    @param mazeFile: name of file used as maze input
+    """
     print('Generating Solution.txt')
     new_maze = []
     for row_index, row in enumerate(maze):
@@ -156,13 +169,20 @@ def pathOnMazeFile(maze, path, algorithm, mazeFile):
                 new_row.append(cell + ' ')
         new_maze.append(new_row)
 
-    with open(algorithm+ mazeFile + '.txt', 'w') as f:
+    with open(algorithm + mazeFile + '.txt', 'w') as f:
         for row in new_maze:
             f.write(''.join(row) + '\n')
 
 
-def visulizePath(maze, path, visited, algorithm, mazeFile):
-    """Marks the path and visited cells on the maze and outputs it to an image file."""
+def visualize_path(maze, path, visited, algorithm, mazeFile):
+    """
+    Marks the path and visited cells on the maze and outputs it to an image file.
+    @param maze: array representation of the maze
+    @param path: [row][colum] position of the path taken
+    @param visited: [row][colum] position of the visited
+    @param algorithm: algorithm used to generate said path
+    @param mazeFile: name of file used as maze input
+    """
     print('Generating Solution.png')
     height = len(maze)
     width = len(maze[0])
@@ -182,45 +202,63 @@ def visulizePath(maze, path, visited, algorithm, mazeFile):
 
 
 def statsFile(path, execution_time, nodes_explored, algorithm, timestamp, mazeFile):
+    """
+    Generates/adds text file and enters all the statistics as a new line in file
+    @param path: [row][colum] position of the path taken
+    @param execution_time: time in seconds to find path
+    @param nodes_explored: number of total nodes visited
+    @param algorithm: algorithm used to generate said path
+    @param timestamp: datetime of [NOW] to be used for files saving
+    @param mazeFile: name of file used as maze input
+    """
     with open('statistics.txt', 'a') as f:
         f.write(
-            f'{timestamp}: Path found with {len(path)} steps in {execution_time:.4f} seconds. Witb {nodes_explored} nodes explored. Using {algorithm}. Using {mazeFile}' + '\n')
+            f'{timestamp}: Path found with {len(path)} steps in {execution_time:.4f} seconds. With {nodes_explored} nodes explored. Using {algorithm}. Using {mazeFile}' + '\n')
+
 
 def makeFiles(path, execution_time, nodes_explored, algorithm, timestamp, mazeFile):
-    statsFile(path, execution_time, nodes_explored, algorithm, timestamp, maze_file)
-    visulizePath(maze, path, visited, algorithm, maze_file)
-    pathOnMazeFile(maze, path, algorithm, maze_file)
+    """
+    Generates all files
+    @param path: [row][colum] position of the path taken
+    @param execution_time: time in seconds to find path
+    @param nodes_explored: number of total nodes visited
+    @param algorithm: algorithm used to generate said path
+    @param timestamp: datetime of [NOW] to be used for files saving
+    @param mazeFile: name of file used as maze input
+    """
+    statsFile(path, execution_time, nodes_explored, algorithm, timestamp, mazeFile)
+    visualize_path(maze, path, visited, algorithm, maze_file)
+    path_on_maze_file(maze, path, algorithm, maze_file)
+
 
 if __name__ == '__main__':
-    parent = {}
     # Select Maze file
     maze_file = input('Maze file nane or path [Press Enter for Default in code]: ')
     if maze_file == '':
-        maze_file = 'maze-Large.txt'
+        maze_file = 'maze-Medium.txt'
     maze = readMazeFile(maze_file)
     start, goal = find_start_and_goal(maze)
 
     # Run Algorithm
-    algorithmSelect = int(input("""\
+    algorithmSelect = int(input("""\n
 1. Depth First Search
 2. Breadth First Search
 Choose Algorithm: """))
     algorithm = ""
     match algorithmSelect:
         case 1:
-            path, nodes_explored, execution_time, visited = dfs(maze, start, goal)
+            path, nodes_explored, execution_time, visited = depth_first_search(maze, start, goal)
             algorithm = "Depth First Search"
         case 2:
-            path, nodes_explored, execution_time, visited = bfs(maze, start, goal)
+            path, nodes_explored, execution_time, visited = breadth_first_search(maze, start, goal)
             algorithm = "Breadth First Search"
 
+    # if a path was located
     if path:
         timestamp = str(datetime.now())
         print(f'Path found with {len(path)} steps in {execution_time:.4f} seconds.')
         print(f'Explored {nodes_explored} nodes.')
         if input("Do you want the output files (Y/N): ") == 'Y':
             makeFiles(path, execution_time, nodes_explored, algorithm, timestamp, maze_file)
-
-
     else:
         print('No path found.')
