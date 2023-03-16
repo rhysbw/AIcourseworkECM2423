@@ -151,7 +151,7 @@ def depth_first_search(maze, start, goal):
 def heuristic_cost(n, goal):
     """
     This is calculates the heuristic cost, currently the Manhattan distance as is used in Maze searches
-    @param n: array representation of the maze
+    @param n: TODO
     @param goal: position of end point
     @return: path taken, number of nodes explored, time taken, coords of visited positions
     """
@@ -175,7 +175,7 @@ def a_star_search(maze, start, goal):
     heap = [(0, start)]
     heapq.heapify(heap)
 
-    # initialize dictionary to store the cost of each node in the path
+    # initialize dictionary to store the cost of each node in the path the G score
     costPath = {start: 0}
 
     while heap:
@@ -309,7 +309,7 @@ Choose Algorithm: """))
             algorithm = "Breadth First Search"
         case 3:
             path, nodes_explored, execution_time, visited = a_star_search(maze, start, goal)
-            algorithm = "AStar search"
+            algorithm = "A* search"
 
     # if a path was located
     if path:
