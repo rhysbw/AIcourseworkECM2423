@@ -72,16 +72,28 @@ def get_valid_adjacent(maze, location):
     return validPos
 
 
+def reveal_path(current, start, parent):
+    path = []
+    while current != start:
+        # reads path taken by checking which node was a parent of the current (starting at end point)
+        path.append(current)
+        current = parent[current]
+    path.append(start)
+    path.reverse()
+
+    return path
+
+
 def breadth_first_search(maze, start, goal):
     """Performs breadth-first search on the maze.
     @param maze: array representation of the maze
     @param start: position of start point
     @param goal: position of end point
-    @return: path to end, amount of nodes explored, time taken to complete, coords of visited positions
+    @return: path to end, amount of nodes explored, time taken to complete, coords of visitedNodes positions
     """
     startTime = time.time()  # for measuring time taken to find path
     queue = deque([start])
-    visited = set()  # to allow not going back to previously visited node
+    visitedNodes = set()  # to allow not going back to previously visitedNodes node
     parent = {}  # to allow for backtracking between nodes to find path
     nodesExplored = 0
 
@@ -89,26 +101,19 @@ def breadth_first_search(maze, start, goal):
     while queue:
         current = queue.popleft()  # sets the current node as the next node in queue
         nodesExplored += 1
-        visited.add(current)  # adds to list of visited nodes
+        visitedNodes.add(current)  # adds to list of visitedNodes nodes
 
         if current == goal:
             endTime = time.time()  # completed time
-            path = []
-            while current != start:
-                # reads path taken by checking which node was a parent of the current (starting at end point)
-                path.append(current)
-                current = parent[current]
-            path.append(start)
-            path.reverse()
-            return path, nodesExplored, endTime - startTime, visited
+            return reveal_path(current, start, parent), nodesExplored, endTime - startTime, visitedNodes
 
-        # checks for nodes that are valid and have not been visited and adds to back of queue
+        # checks for nodes that are valid and have not been visitedNodes and adds to back of queue
         for n in get_valid_adjacent(maze, current):
-            if n not in visited:
+            if n not in visitedNodes:
                 queue.append(n)
                 parent[n] = current
 
-    return None, nodesExplored, time.time() - startTime, visited
+    return None, nodesExplored, time.time() - startTime, visitedNodes
 
 
 def depth_first_search(maze, start, goal):
@@ -121,32 +126,36 @@ def depth_first_search(maze, start, goal):
     """
     startTime = time.time()  # for measuring time taken to find path
     stack = [start]
-    visited = set()  # to allow not going back to previously visited node
+    visitedNodes = set()  # to allow not going back to previously visited node
     parent = {}  # to allow for backtracking between nodes to find path
     nodesExplored = 0
 
     while stack:
         current = stack.pop()  # sets the current nodes as the node at the top of the stack
         nodesExplored += 1
-        visited.add(current)  # adds to list of visited nodes
+        visitedNodes.add(current)  # adds to list of visited nodes
 
         if current == goal:
             endTime = time.time()  # completed time
-            path = []
-            while current != start:
-                # reads path taken by checking which node was a parent of the current (starting at end point)
-                path.append(current)
-                current = parent[current]
-            path.append(start)
-            path.reverse()
-            return path, nodesExplored, endTime - startTime, visited
+            path = reveal_path(current, start, parent)
+            return path, nodesExplored, endTime - startTime, visitedNodes
 
         # checks for nodes that are valid and have not been visited and adds to top of stack
         for n in get_valid_adjacent(maze, current):
-            if n not in visited:
+            if n not in visitedNodes:
                 stack.append(n)
                 parent[n] = current
-    return None, nodesExplored, time.time() - startTime, visited
+    return None, nodesExplored, time.time() - startTime, visitedNodes
+
+
+def heuristic_cost(n, goal):
+    """
+    This is calculates the heuristic cost, currently the Manhattan distance as is used in Maze searches
+    @param n: array representation of the maze
+    @param goal: position of end point
+    @return: path taken, number of nodes explored, time taken, coords of visited positions
+    """
+    return abs(n[0] - goal[0]) + abs(n[1] - goal[1])
 
 
 def a_star_search(maze, start, goal):
@@ -158,7 +167,7 @@ def a_star_search(maze, start, goal):
     @return: path taken, number of nodes explored, time taken, coords of visited positions
     """
     startTime = time.time()  # for measuring time taken to find path
-    visited = set()  # to allow not going back to previously visited node
+    visitedNodes = set()  # to allow not going back to previously visited node
     parent = {}  # to allow for backtracking between nodes to find path
     nodesExplored = 0
 
@@ -167,44 +176,33 @@ def a_star_search(maze, start, goal):
     heapq.heapify(heap)
 
     # initialize dictionary to store the cost of each node in the path
-    g = {start: 0}
+    costPath = {start: 0}
 
     while heap:
         # pop node with the lowest cost from heap
         current_cost, current = heapq.heappop(heap)
         nodesExplored += 1
-        visited.add(current)
+        visitedNodes.add(current)
 
         if current == goal:
             endTime = time.time()  # completed time
-            path = []
-            while current != start:
-                # reads path taken by checking which node was a parent of the current (starting at end point)
-                path.append(current)
-                current = parent[current]
-            path.append(start)
-            path.reverse()
-            return path, nodesExplored, endTime - startTime, visited
+            path = reveal_path(current, start, parent)
+            return path, nodesExplored, endTime - startTime, visitedNodes
 
         # checks for nodes that are valid and have not been visited and adds to heap
         for n in get_valid_adjacent(maze, current):
             # calculate cost of reaching adjacent node
-            new_cost = g[current] + 1  # each step has cost 1
+            new_cost = costPath[current] + 1  # each step has cost 1
 
             # if the adjacent node has not been visited yet or the new cost is less than its current cost
-            if n not in visited or new_cost < g[n]:
-                # update its cost
-                g[n] = new_cost
-
-                # calculate the heuristic cost (Manhattan distance as is used in Maze searches)
-                h = abs(n[0] - goal[0]) + abs(n[1] - goal[1])
+            if n not in visitedNodes or new_cost < costPath[n]:
+                costPath[n] = new_cost  # update its cost
 
                 # add the node to heap with its total cost (heuristic + path cost)
-                heapq.heappush(heap, (new_cost + h, n))
+                heapq.heappush(heap, (new_cost + heuristic_cost(n, goal), n))
 
-                # update its parent
-                parent[n] = current
-    return None, nodesExplored, time.time() - startTime, visited
+                parent[n] = current  # update its parent for backtracking
+    return None, nodesExplored, time.time() - startTime, visitedNodes
 
 
 def path_on_maze_file(maze, path, algorithm, mazeFile):
