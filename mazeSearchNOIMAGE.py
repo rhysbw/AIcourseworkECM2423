@@ -1,7 +1,6 @@
 import time
 import heapq
 from collections import deque
-from PIL import Image
 from datetime import datetime
 
 
@@ -233,32 +232,6 @@ def path_on_maze_file(maze, path, algorithm, mazeFile):
             f.write(''.join(row) + '\n')
 
 
-def visualize_path(maze, path, visited, algorithm, mazeFile):
-    """
-    Marks the path and visited cells on the maze and outputs it to an image file.
-    @param maze: array representation of the maze
-    @param path: [row][colum] position of the path taken
-    @param visited: [row][colum] position of the visited
-    @param algorithm: algorithm used to generate said path
-    @param mazeFile: name of file used as maze input
-    """
-    print('Generating png map')
-    height = len(maze)
-    width = len(maze[0])
-    img = Image.new('RGB', (width, height), 'white')
-    pixels = img.load()
-
-    for row_index, row in enumerate(maze):
-        for col_index, cell in enumerate(row):
-            if cell == '#':
-                pixels[col_index, row_index] = (0, 0, 0)  # black
-            elif (row_index, col_index) in path:
-                pixels[col_index, row_index] = (0, 0, 255)  # blue
-            elif (row_index, col_index) in visited:
-                pixels[col_index, row_index] = (255, 0, 0)  # red
-    img.save(algorithm + mazeFile + '.png')
-
-
 def stats_file(path, execution_time, nodes_explored, algorithm, timestamp, mazeFile):
     """
     Generates/adds text file and enters all the statistics as a new line in file
@@ -285,7 +258,6 @@ def make_files(path, execution_time, nodes_explored, algorithm, timestamp, mazeF
     @param mazeFile: name of file used as maze input
     """
     stats_file(path, execution_time, nodes_explored, algorithm, timestamp, mazeFile)
-    visualize_path(maze, path, visited, algorithm, maze_file)
     path_on_maze_file(maze, path, algorithm, maze_file)
 
 
