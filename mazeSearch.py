@@ -5,7 +5,7 @@ from PIL import Image
 from datetime import datetime
 
 
-def readMazeFile(fileName):
+def read_maze_file(fileName):
     """
     Reads in a maze file and returns a 2D list representing the maze.
     @param fileName: name and location of Maze file
@@ -55,7 +55,8 @@ def is_valid_location(maze, location):
 
 
 def get_valid_adjacent(maze, location):
-    """Returns a list of valid neighboring locations.
+    """
+    Returns a list of valid neighboring locations.
     @param maze: Array representation of the maze
     @param location: Row and Colum of the char in the maze
     @return: list of valid locations
@@ -73,6 +74,12 @@ def get_valid_adjacent(maze, location):
 
 
 def reveal_path(current, start, parent):
+    """
+    Returns a list of coordinates on the path
+    @param start: coordinates of starting point
+    @param parent: parent node for backtracking
+    @return: list of valid locations
+    """
     path = []
     while current != start:
         # reads path taken by checking which node was a parent of the current (starting at end point)
@@ -80,40 +87,7 @@ def reveal_path(current, start, parent):
         current = parent[current]
     path.append(start)
     path.reverse()
-
     return path
-
-
-def breadth_first_search(maze, start, goal):
-    """Performs breadth-first search on the maze.
-    @param maze: array representation of the maze
-    @param start: position of start point
-    @param goal: position of end point
-    @return: path to end, amount of nodes explored, time taken to complete, coords of visitedNodes positions
-    """
-    startTime = time.time()  # for measuring time taken to find path
-    queue = deque([start])
-    visitedNodes = set()  # to allow not going back to previously visitedNodes node
-    parent = {}  # to allow for backtracking between nodes to find path
-    nodesExplored = 0
-
-    # queue is used instead of stack
-    while queue:
-        current = queue.popleft()  # sets the current node as the next node in queue
-        nodesExplored += 1
-        visitedNodes.add(current)  # adds to list of visitedNodes nodes
-
-        if current == goal:
-            endTime = time.time()  # completed time
-            return reveal_path(current, start, parent), nodesExplored, endTime - startTime, visitedNodes
-
-        # checks for nodes that are valid and have not been visitedNodes and adds to back of queue
-        for n in get_valid_adjacent(maze, current):
-            if n not in visitedNodes:
-                queue.append(n)
-                parent[n] = current
-
-    return None, nodesExplored, time.time() - startTime, visitedNodes
 
 
 def depth_first_search(maze, start, goal):
@@ -148,14 +122,46 @@ def depth_first_search(maze, start, goal):
     return None, nodesExplored, time.time() - startTime, visitedNodes
 
 
-def heuristic_cost(n, goal):
+def breadth_first_search(maze, start, goal):
+    """Performs breadth-first search on the maze.
+    @param maze: array representation of the maze
+    @param start: position of start point
+    @param goal: position of end point
+    @return: path to end, amount of nodes explored, time taken to complete, coords of visitedNodes positions
+    """
+    startTime = time.time()  # for measuring time taken to find path
+    queue = deque([start])
+    visitedNodes = set()  # to allow not going back to previously visitedNodes node
+    parent = {}  # to allow for backtracking between nodes to find path
+    nodesExplored = 0
+
+    # queue is used instead of stack
+    while queue:
+        current = queue.popleft()  # sets the current node as the next node in queue
+        nodesExplored += 1
+        visitedNodes.add(current)  # adds to list of visitedNodes nodes
+
+        if current == goal:
+            endTime = time.time()  # completed time
+            return reveal_path(current, start, parent), nodesExplored, endTime - startTime, visitedNodes
+
+        # checks for nodes that are valid and have not been visitedNodes and adds to back of queue
+        for n in get_valid_adjacent(maze, current):
+            if n not in visitedNodes:
+                queue.append(n)
+                parent[n] = current
+
+    return None, nodesExplored, time.time() - startTime, visitedNodes
+
+
+def heuristic_cost(node, goal):
     """
     This is calculates the heuristic cost, currently the Manhattan distance as is used in Maze searches
-    @param n: TODO
+    @param node: coordinates of the node
     @param goal: position of end point
     @return: path taken, number of nodes explored, time taken, coords of visited positions
     """
-    return abs(n[0] - goal[0]) + abs(n[1] - goal[1])
+    return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
 
 
 def a_star_search(maze, start, goal):
@@ -171,16 +177,15 @@ def a_star_search(maze, start, goal):
     parent = {}  # to allow for backtracking between nodes to find path
     nodesExplored = 0
 
-    # initialize heap with starting node and its cost (heuristic + path cost)
+    # heap with starting node and its cost (heuristic + path cost)
     heap = [(0, start)]
     heapq.heapify(heap)
 
-    # initialize dictionary to store the cost of each node in the path the G score
+    # dict to store the cost of each node in the path (the G score)
     costPath = {start: 0}
 
     while heap:
-        # pop node with the lowest cost from heap
-        current_cost, current = heapq.heappop(heap)
+        current_cost, current = heapq.heappop(heap)  # pop node with the lowest cost from heap
         nodesExplored += 1
         visitedNodes.add(current)
 
@@ -255,7 +260,7 @@ def visualize_path(maze, path, visited, algorithm, mazeFile):
     img.save(algorithm + mazeFile + '.png')
 
 
-def statsFile(path, execution_time, nodes_explored, algorithm, timestamp, mazeFile):
+def stats_file(path, execution_time, nodes_explored, algorithm, timestamp, mazeFile):
     """
     Generates/adds text file and enters all the statistics as a new line in file
     @param path: [row][colum] position of the path taken
@@ -270,7 +275,7 @@ def statsFile(path, execution_time, nodes_explored, algorithm, timestamp, mazeFi
             f'{timestamp}: Path found with {len(path)} steps in {execution_time:.4f} seconds. With {nodes_explored} nodes explored. Using {algorithm}. Using {mazeFile}' + '\n')
 
 
-def makeFiles(path, execution_time, nodes_explored, algorithm, timestamp, mazeFile):
+def make_files(path, execution_time, nodes_explored, algorithm, timestamp, mazeFile):
     """
     Generates all files
     @param path: [row][colum] position of the path taken
@@ -280,7 +285,7 @@ def makeFiles(path, execution_time, nodes_explored, algorithm, timestamp, mazeFi
     @param timestamp: datetime of [NOW] to be used for files saving
     @param mazeFile: name of file used as maze input
     """
-    statsFile(path, execution_time, nodes_explored, algorithm, timestamp, mazeFile)
+    stats_file(path, execution_time, nodes_explored, algorithm, timestamp, mazeFile)
     visualize_path(maze, path, visited, algorithm, maze_file)
     path_on_maze_file(maze, path, algorithm, maze_file)
 
@@ -290,7 +295,7 @@ if __name__ == '__main__':
     maze_file = input('Maze file nane or path [Press Enter for Default in code]: ')
     if maze_file == '':
         maze_file = 'maze-Medium.txt'
-    maze = readMazeFile(maze_file)
+    maze = read_maze_file(maze_file)
     start, goal = find_start_and_goal(maze)
 
     # Run Algorithm
@@ -317,6 +322,8 @@ Choose Algorithm: """))
         print(f'Path found with {len(path)} steps in {execution_time:.4f} seconds.')
         print(f'Explored {nodes_explored} nodes.')
         if input("Do you want the output files - This can take a while for larger mazes (Y/N): ") == 'Y':
-            makeFiles(path, execution_time, nodes_explored, algorithm, timestamp, maze_file)
+            make_files(path, execution_time, nodes_explored, algorithm, timestamp, maze_file)
+        if input("Do you want the path as a list of coordinates (Y/N): ") == 'Y':
+            print(path)
     else:
         print('No path found.')
